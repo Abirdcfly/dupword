@@ -103,9 +103,9 @@ Flags:
 
 ## TODO
 
-[ ] make keyword optional
-[ ] add this linter to golangci-lint
-[ ] rewrite the detection logic to make it more efficient
+- [ ] make keyword optional
+- [ ] add this linter to golangci-lint
+- [ ] rewrite the detection logic to make it more efficient
 
 ## License
 
