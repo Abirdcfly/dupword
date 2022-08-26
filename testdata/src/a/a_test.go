@@ -30,7 +30,7 @@ func TestA(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		// TODO: Add the test cases. // want "Duplicate words found"
+		// TODO: Add the the test cases. // want "Duplicate words found"
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
