@@ -1,4 +1,4 @@
-module github.com/abirdcfly/dupword
+module github.com/Abirdcfly/dupword
 
 go 1.19
 

@@ -25,7 +25,7 @@ package dupword_test
 import (
 	"testing"
 
-	"github.com/abirdcfly/dupword"
+	"github.com/Abirdcfly/dupword"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
