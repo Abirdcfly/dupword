@@ -45,7 +45,7 @@ go install github.com/Abirdcfly/dupword/cmd/dupword@latest
 **Or** install the main branch (including the last commit) with:
 
 ```bash
-go install github.com/Abirdcfly/dupword/cmd/dupword@master
+go install github.com/Abirdcfly/dupword/cmd/dupword@main
 ```
 
 ## Usage
