@@ -42,7 +42,8 @@ const (
 	Doc = `checks for duplicate words in the source code (usually miswritten)
 
 This analyzer checks miswritten duplicate words in comments or package doc or string declaration`
-	Message = "Duplicate words found"
+	Message       = "Duplicate words found"
+	CommentPrefix = `//`
 )
 
 var (
@@ -75,11 +76,14 @@ func NewAnalyzer(useDefaultWord bool, keyWord ...string) (*analysis.Analyzer, er
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
+	for _, file := range pass.Files {
+		a.fixDuplicateWordInComment(pass, file)
+	}
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-	inspect.Preorder(nil, func(n ast.Node) {
-		if f, ok := n.(*ast.File); ok {
-			a.fixDuplicateWordInComment(pass, f)
-		}
+	nodeFilter := []ast.Node{
+		(*ast.BasicLit)(nil),
+	}
+	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		if lit, ok := n.(*ast.BasicLit); ok {
 			a.fixDuplicateWordInString(pass, lit)
 		}
@@ -88,6 +92,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 }
 
 func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
+	var preLine *ast.Comment
 	for _, cg := range f.Comments {
 		for _, c := range cg.List {
 			update, find := a.Check(c.Text)
@@ -101,6 +106,25 @@ func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
 					}},
 				}}})
 			}
+			if preLine != nil && preLine.End()+1 == c.Slash {
+				update, find := a.Check(preLine.Text + "\n" + strings.TrimPrefix(c.Text, CommentPrefix))
+				if find {
+					var suggestedFixes []analysis.SuggestedFix
+					if strings.Contains(update, preLine.Text+"\n") {
+						update = CommentPrefix + strings.TrimPrefix(update, preLine.Text+"\n")
+						suggestedFixes = []analysis.SuggestedFix{{
+							Message: "Update",
+							TextEdits: []analysis.TextEdit{{
+								Pos:     c.Slash,
+								End:     c.End(),
+								NewText: []byte(update),
+							}},
+						}}
+					}
+					pass.Report(analysis.Diagnostic{Pos: c.Slash, End: c.End(), Message: Message, SuggestedFixes: suggestedFixes})
+				}
+			}
+			preLine = c
 		}
 	}
 }

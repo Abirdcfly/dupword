@@ -115,10 +115,10 @@ func Test_checkOneKey(t *testing.T) {
 		{
 			name: "multi line with key word twice",
 			args: args{
-				raw: "hello \t the \n   the world",
+				raw: "// NewDBStats returns a new DBStats object initialized using the\n the new function from each component.",
 				key: "the",
 			},
-			wantNew:  "hello \t the \n   world",
+			wantNew:  "// NewDBStats returns a new DBStats object initialized using the\n new function from each component.",
 			wantFind: true,
 		},
 		{
