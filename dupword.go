@@ -107,12 +107,21 @@ func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
 				}}})
 			}
 			if preLine != nil {
-				before, after, _ := strings.Cut(c.Text, CommentPrefix)
-				update, find := a.Check(preLine.Text + "\n" + after)
+				fields := strings.Fields(preLine.Text)
+				if len(fields) < 1 {
+					continue
+				}
+				preLineContent := fields[len(fields)-1] + "\n"
+				thisLineContent := c.Text
+				if find {
+					thisLineContent = update
+				}
+				before, after, _ := strings.Cut(thisLineContent, CommentPrefix)
+				update, find := a.Check(preLineContent + after)
 				if find {
 					var suggestedFixes []analysis.SuggestedFix
-					if strings.Contains(update, preLine.Text+"\n") {
-						update = before + CommentPrefix + strings.TrimPrefix(update, preLine.Text+"\n")
+					if strings.Contains(update, preLineContent) {
+						update = before + CommentPrefix + strings.TrimPrefix(update, preLineContent)
 						suggestedFixes = []analysis.SuggestedFix{{
 							Message: "Update",
 							TextEdits: []analysis.TextEdit{{
