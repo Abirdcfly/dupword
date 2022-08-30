@@ -107,6 +107,11 @@ Flags:
 - [ ] add this linter to golangci-lint
 - [ ] rewrite the detection logic to make it more efficient
 
+## Limitation
+
+1. only for `*.go` file.But some miswritten occurs in `*.md` or `*.json` file.(example: kubernetes)
+2. The first time, `-fix` args can't auto-fix `*_test.go` file, you need to run the command once again, this is a bug of golang/x/tools, see [go#54740](https://github.com/golang/go/issues/54740) for more information. (ps: This problem occurs with basically all linters that use the `go/analysis` package)
+
 ## License
 
 MIT
