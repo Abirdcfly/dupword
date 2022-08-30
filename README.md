@@ -109,8 +109,9 @@ Flags:
 
 ## Limitation
 
-1. only for `*.go` file.But some miswritten occurs in `*.md` or `*.json` file.(example: kubernetes), In this case, my advice is to use [rg](https://github.com/BurntSushi/ripgrep) to do the lookup and replace manually.
+1. Only for `*.go` file.But some miswritten occurs in `*.md` or `*.json` file.(example: kubernetes), In this case, my advice is to use [rg](https://github.com/BurntSushi/ripgrep) to do the lookup and replace manually.
 2. The first time, `-fix` args can't auto-fix `*_test.go` file, you need to run the command once again, this is a bug of golang/x/tools, see [go#54740](https://github.com/golang/go/issues/54740) for more information. (ps: This problem occurs with basically all linters that use the `go/analysis` package), In this case, my advice is to run the linter command multiple times.:sweat_smile:
+3. When use `-fix`, also running `go fmt` in the dark.(This logic is determined upstream, the project does not have this part of the code.)
 
 ## License
 
