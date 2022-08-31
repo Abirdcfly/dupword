@@ -1,4 +1,8 @@
 # dupword
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Abirdcfly/dupword?style=flat-square)
+[![GoDoc](https://godoc.org/github.com/Abirdcfly/dupword?status.svg)](https://pkg.go.dev/github.com/Abirdcfly/dupword)
+[![Actions Status](https://github.com/Abirdcfly/dupword/actions/workflows/lint.yml/badge.svg)](https://github.com/Abirdcfly/dupword/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Abirdcfly/dupword)](https://goreportcard.com/report/github.com/Abirdcfly/dupword)
 
 A linter that checks for duplicate words in the source code (usually miswritten)
 
