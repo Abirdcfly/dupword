@@ -6,6 +6,8 @@
 
 A linter that checks for duplicate words in the source code (usually miswritten)
 
+Examples in real code and related issues can be viewed in https://github.com/Abirdcfly/dupword/issues/3
+
 ## example
 
 1. Repeated words appear on two adjacent lines [commit](https://github.com/golang/go/commit/d8f90ce0f8119bf593efb6fb91825de5b61fcda7)
