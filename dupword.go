@@ -43,7 +43,7 @@ const (
 	Doc  = `checks for duplicate words in the source code (usually miswritten)
 
 This analyzer checks miswritten duplicate words in comments or package doc or string declaration`
-	Message       = "Duplicate words found"
+	Message       = "Duplicate words (%s) found"
 	CommentPrefix = `//`
 )
 
@@ -101,9 +101,9 @@ func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
 	for _, cg := range f.Comments {
 		var preLine *ast.Comment
 		for _, c := range cg.List {
-			update, find := a.Check(c.Text)
+			update, keyword, find := a.Check(c.Text)
 			if find {
-				pass.Report(analysis.Diagnostic{Pos: c.Slash, End: c.End(), Message: Message, SuggestedFixes: []analysis.SuggestedFix{{
+				pass.Report(analysis.Diagnostic{Pos: c.Slash, End: c.End(), Message: fmt.Sprintf(Message, keyword), SuggestedFixes: []analysis.SuggestedFix{{
 					Message: "Update",
 					TextEdits: []analysis.TextEdit{{
 						Pos:     c.Slash,
@@ -123,7 +123,7 @@ func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
 					thisLineContent = update
 				}
 				before, after, _ := strings.Cut(thisLineContent, CommentPrefix)
-				update, find := a.Check(preLineContent + after)
+				update, keyword, find := a.Check(preLineContent + after)
 				if find {
 					var suggestedFixes []analysis.SuggestedFix
 					if strings.Contains(update, preLineContent) {
@@ -137,7 +137,7 @@ func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
 							}},
 						}}
 					}
-					pass.Report(analysis.Diagnostic{Pos: c.Slash, End: c.End(), Message: Message, SuggestedFixes: suggestedFixes})
+					pass.Report(analysis.Diagnostic{Pos: c.Slash, End: c.End(), Message: fmt.Sprintf(Message, keyword), SuggestedFixes: suggestedFixes})
 				}
 			}
 			preLine = c
@@ -156,12 +156,12 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 		value = lit.Value
 	}
 	quote := value != lit.Value
-	update, find := a.Check(value)
+	update, keyword, find := a.Check(value)
 	if quote {
 		update = strconv.Quote(update)
 	}
 	if find {
-		pass.Report(analysis.Diagnostic{Pos: lit.Pos(), End: lit.End(), Message: Message, SuggestedFixes: []analysis.SuggestedFix{{
+		pass.Report(analysis.Diagnostic{Pos: lit.Pos(), End: lit.End(), Message: fmt.Sprintf(Message, keyword), SuggestedFixes: []analysis.SuggestedFix{{
 			Message: "Update",
 			TextEdits: []analysis.TextEdit{{
 				Pos:     lit.Pos(),
@@ -213,13 +213,18 @@ func CheckOneKey(raw, key string) (new string, find bool) {
 	return
 }
 
-func (a *analyzer) Check(raw string) (update string, find bool) {
+func (a *analyzer) Check(raw string) (update string, keyword string, find bool) {
 	for _, key := range a.KeyWord {
 		updateOne, findOne := CheckOneKey(raw, key)
 		if findOne {
 			raw = updateOne
 			find = findOne
 			update = updateOne
+			if keyword == "" {
+				keyword = key
+			} else {
+				keyword = keyword + "," + key
+			}
 		}
 	}
 	return

@@ -56,17 +56,31 @@ go install github.com/Abirdcfly/dupword/cmd/dupword@main
 
 ## Usage
 
+### 1. default
+
 Run with default settings(include test file, only check keywords `the`,`a` and `and`):
 
 ```bash
-dupword ./...
+$ dupword ./...
+/Users/xxx/go/src/dupword/dupword_test.go:88:10: Duplicate words (the) found
+exit status 3
 ```
+
+### 2. skip test file
 
 Skip detection test file(`*_test.go`):
 
 ```bash
-dupword -test=false ./...
+$ dupword -test=false ./...
 ```
+
+### 3. auto-fix
+
+```bash
+$ dupword -fix ./...
+```
+
+### 4. all options
 
 All options:
 
@@ -94,6 +108,8 @@ Flags:
         print analyzer flags in JSON
   -json
         emit JSON output
+  -keyword value
+        key words for detecting duplicate words (default the,and,a)
   -memprofile string
         write memory profile to this file
   -source
@@ -109,7 +125,6 @@ Flags:
 
 ## TODO
 
-- [ ] make keyword optional
 - [ ] add this linter to golangci-lint
 - [ ] rewrite the detection logic to make it more efficient
 

@@ -25,10 +25,10 @@ package a
 import "fmt"
 
 func A() {
-	// print the the line // want "Duplicate words found"
+	// print the the line // want `Duplicate words \(the\) found`
 	fmt.Println("hello")
 	// print the line
 	fmt.Println("word")
-	line := "print the\n the line, print the the \n\t the  line." // want "Duplicate words found"
+	line := "print the\n the line, and and print the the \n\t the  line." // want `Duplicate words \(the,and\) found`
 	fmt.Println(line)
 }
