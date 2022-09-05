@@ -25,7 +25,7 @@
 package dupword
 
 import (
-	"errors"
+	"flag"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -39,7 +39,8 @@ import (
 )
 
 const (
-	Doc = `checks for duplicate words in the source code (usually miswritten)
+	Name = "dupword"
+	Doc  = `checks for duplicate words in the source code (usually miswritten)
 
 This analyzer checks miswritten duplicate words in comments or package doc or string declaration`
 	Message       = "Duplicate words found"
@@ -47,32 +48,37 @@ This analyzer checks miswritten duplicate words in comments or package doc or st
 )
 
 var (
-	noKeyWordErr = errors.New("should have at lease one keyword")
-	defaultWord  = []string{"the", "and", "a"}
+	defaultWord = []string{"the", "and", "a"}
 )
 
 type analyzer struct {
 	KeyWord []string
 }
 
-func NewAnalyzer(useDefaultWord bool, keyWord ...string) (*analysis.Analyzer, error) {
-	var word []string
-	if !useDefaultWord {
-		if len(keyWord) == 0 {
-			return nil, noKeyWordErr
-		}
-		word = keyWord
-	} else {
-		word = append(defaultWord, keyWord...)
+func (a *analyzer) String() string {
+	return strings.Join(a.KeyWord, ",")
+}
+
+func (a *analyzer) Set(w string) error {
+	if len(w) != 0 {
+		a.KeyWord = make([]string, 0)
+		a.KeyWord = append(a.KeyWord, strings.Split(w, ",")...)
 	}
-	a := analyzer{KeyWord: word}
-	return &analysis.Analyzer{
-		Name:             "dupword",
+	return nil
+}
+
+func NewAnalyzer() *analysis.Analyzer {
+	analyzer := &analyzer{KeyWord: defaultWord}
+	a := &analysis.Analyzer{
+		Name:             Name,
 		Doc:              Doc,
 		Requires:         []*analysis.Analyzer{inspect.Analyzer},
-		Run:              a.run,
+		Run:              analyzer.run,
 		RunDespiteErrors: true,
-	}, nil
+	}
+	a.Flags.Init(Name, flag.ExitOnError)
+	a.Flags.Var(analyzer, "keyword", "key words for detecting duplicate words")
+	return a
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {

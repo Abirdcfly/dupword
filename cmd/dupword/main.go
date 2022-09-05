@@ -23,18 +23,11 @@
 package main
 
 import (
-	"log"
-
 	"github.com/Abirdcfly/dupword"
 
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
 func main() {
-	analyzer, err := dupword.NewAnalyzer(true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	singlechecker.Main(analyzer)
+	singlechecker.Main(dupword.NewAnalyzer())
 }

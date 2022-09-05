@@ -30,10 +30,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	analyzer, err := dupword.NewAnalyzer(true, "")
-	if err != nil {
-		t.Fatalf("analyzer init failed:%s", err)
-	}
+	analyzer := dupword.NewAnalyzer()
 	tests := []string{"a", "good"}
 	analysistest.Run(t, analysistest.TestData(), analyzer, tests...)
 }
