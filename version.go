@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2022 Abirdcfly
+// # Copyright (c) 2022 Abirdcfly
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package main
+package dupword
 
 import (
 	"fmt"
-	"runtime/debug"
-
-	"github.com/Abirdcfly/dupword"
-
-	"golang.org/x/tools/go/analysis/singlechecker"
+	"os"
 )
 
-func main() {
-	dupword.Version = buildVersion()
-	singlechecker.Main(dupword.NewAnalyzer())
-}
+var Version = "dev"
 
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "now"
-)
+type version struct{}
 
-func buildVersion() string {
-	info, _ := debug.ReadBuildInfo()
-	return fmt.Sprintf("version\t%s\ncommit\t%s\ndate\t%s\n%s", version, commit, date, info.String())
+func (version) IsBoolFlag() bool { return true }
+func (version) Get() interface{} { return nil }
+func (version) String() string   { return "" }
+func (version) Set(_ string) error {
+	fmt.Println(Version)
+	os.Exit(0)
+	return nil
 }

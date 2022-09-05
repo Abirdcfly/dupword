@@ -78,6 +78,7 @@ func NewAnalyzer() *analysis.Analyzer {
 	}
 	a.Flags.Init(Name, flag.ExitOnError)
 	a.Flags.Var(analyzer, "keyword", "key words for detecting duplicate words")
+	a.Flags.Var(version{}, "V", "print version and exit")
 	return a
 }
 
