@@ -1,4 +1,5 @@
 # dupword
+
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/Abirdcfly/dupword?style=flat-square)
 [![GoDoc](https://godoc.org/github.com/Abirdcfly/dupword?status.svg)](https://pkg.go.dev/github.com/Abirdcfly/dupword)
 [![Actions Status](https://github.com/Abirdcfly/dupword/actions/workflows/lint.yml/badge.svg)](https://github.com/Abirdcfly/dupword/actions)
@@ -6,7 +7,7 @@
 
 A linter that checks for duplicate words in the source code (usually miswritten)
 
-Examples in real code and related issues can be viewed in https://github.com/Abirdcfly/dupword/issues/3
+Examples in real code and related issues can be viewed in [dupword#3](https://github.com/Abirdcfly/dupword/issues/3)
 
 ## example
 
@@ -131,9 +132,10 @@ Flags:
 ## Limitation
 
 1. Only for `*.go` file.But some miswritten occurs in `*.md` or `*.json` file.(example: kubernetes), In this case, my advice is to use [rg](https://github.com/BurntSushi/ripgrep) to do the lookup and replace manually.
-2. The first time, `-fix` args can't auto-fix `*_test.go` file, you need to run the command once again, this is a bug of golang/x/tools, see https://github.com/golang/go/issues/54740 for more information and it will be fixed by ~~[CL 426594](https://go-review.googlesource.com/c/tools/+/426594)~~ [CL 426734](https://go-review.googlesource.com/c/tools/+/426734/) . (ps: This problem occurs with basically all linters that use the `go/analysis` package), In this case, my advice is to run the linter command multiple times.:sweat_smile:
+2. The first time, `-fix` args can't auto-fix `*_test.go` file, you need to run the command once again, this is a bug of golang/x/tools, see [https://github.com/golang/go/issues/54740](https://github.com/golang/go/issues/54740) for more information and it will be fixed by ~~[CL 426594](https://go-review.googlesource.com/c/tools/+/426594)~~ [CL 426734](https://go-review.googlesource.com/c/tools/+/426734/) . (ps: This problem occurs with basically all linters that use the `go/analysis` package), In this case, my advice is to run the linter command multiple times.:sweat_smile:
 3. When use `-fix`, also running `go fmt` in the dark.([This logic is determined upstream](https://github.com/golang/tools/blob/248c34b88a4148128f89e41923498bd86f805b7d/go/analysis/internal/checker/checker.go#L424-L433), the project does not have this part of the code.)
 4. If package doc like above include duplicated word, `-fix` will wrong, see golang/go#54774 for more information and it will be fixed by [CL 426654](https://go-review.googlesource.com/c/tools/+/426654).
+
 ```go
 /*
 package a
