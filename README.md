@@ -135,16 +135,6 @@ Flags:
 2. The first time, `-fix` args can't auto-fix `*_test.go` file, you need to run the command once again, this is a bug of golang/x/tools, see [https://github.com/golang/go/issues/54740](https://github.com/golang/go/issues/54740) for more information and it will be fixed by ~~[CL 426594](https://go-review.googlesource.com/c/tools/+/426594)~~ [CL 426734](https://go-review.googlesource.com/c/tools/+/426734/) . (ps: This problem occurs with basically all linters that use the `go/analysis` package), In this case, my advice is to run the linter command multiple times.:sweat_smile:
 3. When use `-fix`, also running `go fmt` in the dark.([This logic is determined upstream](https://github.com/golang/tools/blob/248c34b88a4148128f89e41923498bd86f805b7d/go/analysis/internal/checker/checker.go#L424-L433), the project does not have this part of the code.)
 
-```go
-/*
-package a
-this comment include duplicated word and
-and so the current line of `and` should 
-be removed
-*/
-package a
-```
-
 ## License
 
 MIT
