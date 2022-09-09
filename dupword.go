@@ -29,9 +29,11 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -48,7 +50,8 @@ This analyzer checks miswritten duplicate words in comments or package doc or st
 )
 
 var (
-	defaultWord = []string{"the", "and", "a"}
+	defaultWord = []string{}
+	// defaultWord = []string{"the", "and", "a"}
 )
 
 type analyzer struct {
@@ -173,50 +176,93 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 	}
 }
 
-func CheckOneKey(raw, key string) (new string, find bool) {
-	if x := strings.Split(raw, key); len(x) < 2 {
-		return
-	}
-	newLine := strings.Builder{}
-	wordStart, symbolStart := 0, 0
-	curWord, preWord := "", ""
-	lastSymbol := ""
-	var lastRune int32
-	for i, w := range raw {
-		if !unicode.IsSpace(w) && unicode.IsSpace(lastRune) {
-			symbol := raw[symbolStart:i]
-			if !(curWord == key && curWord == preWord) {
-				newLine.WriteString(lastSymbol)
-				newLine.WriteString(curWord)
-			} else {
-				find = true
-				newLine.WriteString(lastSymbol)
-				symbol = ""
+// CheckOneKey use to check there is defined duplicate word in a string.
+// raw is checked line. key is the keyword to check. empty means just check duplicate word.
+func CheckOneKey(raw, key string) (new string, findWord string, find bool) {
+	if key == "" {
+		has := false
+		fields := strings.Fields(raw)
+		for i := range fields {
+			if i == len(fields)-1 {
+				break
 			}
-			lastSymbol = symbol
+			if fields[i] == fields[i+1] {
+				has = true
+			}
+		}
+		if !has {
+			return
+		}
+	} else {
+		if x := strings.Split(raw, key); len(x) < 2 {
+			return
+		}
+	}
+
+	findWordMap := make(map[string]bool, 4)
+	newLine := strings.Builder{}
+	wordStart, spaceStart := 0, 0
+	curWord, preWord := "", ""
+	lastSpace := ""
+	var lastRune int32
+	for i, r := range raw {
+		if !unicode.IsSpace(r) && unicode.IsSpace(lastRune) {
+			// word start position
+			/*
+				                                             i
+				                                             |
+					hello[ spaceA ]the[ spaceB ]the[ spaceC ]word
+				                   ^            ^
+				                   |            curWord: the
+				                   preWord: the
+			*/
+			symbol := raw[spaceStart:i]
+			if ((key != "" && curWord == key) || key == "") && curWord == preWord && curWord != "" {
+				firstRune, _ := utf8.DecodeRuneInString(curWord)
+				if !unicode.IsPunct(firstRune) {
+					find = true
+					findWordMap[curWord] = true
+					newLine.WriteString(lastSpace)
+					symbol = ""
+				}
+			} else {
+				newLine.WriteString(lastSpace)
+				newLine.WriteString(curWord)
+			}
+			lastSpace = symbol
 			preWord = curWord
 			wordStart = i
-		} else if unicode.IsSpace(w) && !unicode.IsSpace(lastRune) {
-			symbolStart = i
+		} else if unicode.IsSpace(r) && !unicode.IsSpace(lastRune) {
+			// space start position
+			spaceStart = i
 			curWord = raw[wordStart:i]
 		} else if i == len(raw)-1 {
+			// last position
 			word := raw[wordStart:]
-			if !(word == key && word == preWord) {
-				newLine.WriteString(lastSymbol)
+			if !(((key != "" && word == key) || key == "") && word == preWord) {
+				newLine.WriteString(lastSpace)
 				newLine.WriteString(word)
 			}
 		}
-		lastRune = w
+		lastRune = r
 	}
 	if find {
 		new = newLine.String()
+		findWordSlice := make([]string, len(findWordMap))
+		i := 0
+		for k := range findWordMap {
+			findWordSlice[i] = k
+			i++
+		}
+		sort.Strings(findWordSlice)
+		findWord = strings.Join(findWordSlice, ",")
 	}
 	return
 }
 
 func (a *analyzer) Check(raw string) (update string, keyword string, find bool) {
 	for _, key := range a.KeyWord {
-		updateOne, findOne := CheckOneKey(raw, key)
+		updateOne, _, findOne := CheckOneKey(raw, key)
 		if findOne {
 			raw = updateOne
 			find = findOne
@@ -227,6 +273,9 @@ func (a *analyzer) Check(raw string) (update string, keyword string, find bool) 
 				keyword = keyword + "," + key
 			}
 		}
+	}
+	if len(a.KeyWord) == 0 {
+		return CheckOneKey(raw, "")
 	}
 	return
 }

@@ -44,6 +44,7 @@ func Test_checkOneKey(t *testing.T) {
 		name     string
 		args     args
 		wantNew  string
+		wantKey  string
 		wantFind bool
 	}{
 		{
@@ -89,6 +90,7 @@ func Test_checkOneKey(t *testing.T) {
 				key: "the",
 			},
 			wantNew:  "hello the world",
+			wantKey:  "the",
 			wantFind: true,
 		},
 		{
@@ -98,6 +100,7 @@ func Test_checkOneKey(t *testing.T) {
 				key: "the",
 			},
 			wantNew:  "hello the world",
+			wantKey:  "the",
 			wantFind: true,
 		},
 		{
@@ -116,6 +119,7 @@ func Test_checkOneKey(t *testing.T) {
 				key: "the",
 			},
 			wantNew:  "// NewDBStats returns a new DBStats object initialized using the\n new function from each component.",
+			wantKey:  "the",
 			wantFind: true,
 		},
 		{
@@ -125,6 +129,7 @@ func Test_checkOneKey(t *testing.T) {
 				key: "the",
 			},
 			wantNew:  "hello \t the \n   world",
+			wantKey:  "the",
 			wantFind: true,
 		},
 		{
@@ -134,17 +139,30 @@ func Test_checkOneKey(t *testing.T) {
 				key: "the",
 			},
 			wantNew:  "print the\nline, print the\n\t line.",
+			wantKey:  "the",
+			wantFind: true,
+		},
+		{
+			name: "multi line with key word multi times",
+			args: args{
+				raw: "print the\nthe line, print the\n\t the line.",
+			},
+			wantNew:  "print the\nline, print the\n\t line.",
+			wantKey:  "the",
 			wantFind: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNew, gotFind := dupword.CheckOneKey(tt.args.raw, tt.args.key)
+			gotNew, gotKey, gotFind := dupword.CheckOneKey(tt.args.raw, tt.args.key)
 			if gotNew != tt.wantNew {
 				t.Errorf("CheckOneKey() gotNew = %q, want %q", gotNew, tt.wantNew)
 			}
 			if gotFind != tt.wantFind {
 				t.Errorf("CheckOneKey() gotFind = %v, want %v", gotFind, tt.wantFind)
+			}
+			if gotKey != tt.wantKey {
+				t.Errorf("CheckOneKey() gotKey = %v, want %v", gotKey, tt.wantKey)
 			}
 		})
 	}

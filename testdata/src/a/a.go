@@ -29,6 +29,9 @@ func A() {
 	fmt.Println("hello")
 	// print the line
 	fmt.Println("word")
-	line := "print the\n the line, and and print the the \n\t the  line." // want `Duplicate words \(the,and\) found`
+	line := "print the\n the line, and and print the the \n\t the  line." // want `Duplicate words \(and,the\) found`
 	fmt.Println(line)
+	// so so this file done. // want `Duplicate words \(so\) found`
+	// 中文重复复单词无法检测，因为中文不使用空格来分割字符，我们都是用肉眼看的，哈哈哈哈。
+	// 除 非 写 成 这 样 样 子 ！  // want `Duplicate words \(样\) found`
 }
