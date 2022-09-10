@@ -167,3 +167,42 @@ func Test_checkOneKey(t *testing.T) {
 		})
 	}
 }
+
+func TestExcludeWords(t *testing.T) {
+	type args struct {
+		word string
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantExclude bool
+	}{
+		{
+			name:        "normal word should not exclude",
+			args:        args{word: "normal"},
+			wantExclude: false,
+		},
+		{
+			name:        "number should not exclude",
+			args:        args{word: "3"},
+			wantExclude: false,
+		},
+		{
+			name:        "%s should exclude",
+			args:        args{word: "%s"},
+			wantExclude: true,
+		},
+		{
+			name:        "</div> should exclude",
+			args:        args{word: "</div>"},
+			wantExclude: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotExclude := dupword.ExcludeWords(tt.args.word); gotExclude != tt.wantExclude {
+				t.Errorf("excludeWords() = %v, want %v", gotExclude, tt.wantExclude)
+			}
+		})
+	}
+}

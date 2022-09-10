@@ -218,8 +218,7 @@ func CheckOneKey(raw, key string) (new string, findWord string, find bool) {
 			*/
 			symbol := raw[spaceStart:i]
 			if ((key != "" && curWord == key) || key == "") && curWord == preWord && curWord != "" {
-				firstRune, _ := utf8.DecodeRuneInString(curWord)
-				if !unicode.IsPunct(firstRune) {
+				if !ExcludeWords(curWord) {
 					find = true
 					findWordMap[curWord] = true
 					newLine.WriteString(lastSpace)
@@ -278,4 +277,18 @@ func (a *analyzer) Check(raw string) (update string, keyword string, find bool) 
 		return CheckOneKey(raw, "")
 	}
 	return
+}
+
+// ExcludeWords determines whether duplicate words should be reported,
+//
+//	e.g. %s, </div> should not be reported.
+func ExcludeWords(word string) (exclude bool) {
+	firstRune, _ := utf8.DecodeRuneInString(word)
+	if unicode.IsPunct(firstRune) {
+		return true
+	}
+	if unicode.IsSymbol(firstRune) {
+		return true
+	}
+	return false
 }
