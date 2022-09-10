@@ -59,7 +59,8 @@ go install github.com/Abirdcfly/dupword/cmd/dupword@main
 
 ### 1. default
 
-Run with default settings(include test file, only check keywords `the`,`a` and `and`):
+Run with default settings(include test file):
+**But note that not all repeated words are wrong**
 
 ```bash
 $ dupword ./...
@@ -110,7 +111,7 @@ Flags:
   -json
         emit JSON output
   -keyword value
-        key words for detecting duplicate words (default the,and,a)
+        key words for detecting duplicate words
   -memprofile string
         write memory profile to this file
   -source
@@ -122,6 +123,14 @@ Flags:
   -trace string
         write trace log to this file
   -v    no effect (deprecated)
+```
+
+### 5. my advice
+
+use `--keyword=the,and,a` and `-fix` together.
+
+```bash
+$ dupword --keyword=the,and,a -fix ./...
 ```
 
 ## TODO
