@@ -151,6 +151,15 @@ func Test_checkOneKey(t *testing.T) {
 			wantKey:  "the",
 			wantFind: true,
 		},
+		{
+			name: "duplicate word is last word",
+			args: args{
+				raw: "this line include duplicate word	and\nand",
+			},
+			wantNew:  "this line include duplicate word	and",
+			wantKey:  "and",
+			wantFind: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

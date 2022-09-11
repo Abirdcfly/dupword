@@ -238,7 +238,12 @@ func CheckOneKey(raw, key string) (new string, findWord string, find bool) {
 		} else if i == len(raw)-1 {
 			// last position
 			word := raw[wordStart:]
-			if !(((key != "" && word == key) || key == "") && word == preWord) {
+			if ((key != "" && word == key) || key == "") && word == preWord {
+				if !ExcludeWords(word) {
+					find = true
+					findWordMap[word] = true
+				}
+			} else {
 				newLine.WriteString(lastSpace)
 				newLine.WriteString(word)
 			}
