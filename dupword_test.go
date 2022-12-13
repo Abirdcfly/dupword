@@ -194,7 +194,12 @@ func TestExcludeWords(t *testing.T) {
 		{
 			name:        "number should not exclude",
 			args:        args{word: "3"},
-			wantExclude: false,
+			wantExclude: true,
+		},
+		{
+			name:        "number,number should exclude",
+			args:        args{word: "3,3 3,3"},
+			wantExclude: true,
 		},
 		{
 			name:        "%s should exclude",
