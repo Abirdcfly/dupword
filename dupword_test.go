@@ -33,6 +33,15 @@ func Test(t *testing.T) {
 	analyzer := dupword.NewAnalyzer()
 	tests := []string{"a", "good"}
 	analysistest.Run(t, analysistest.TestData(), analyzer, tests...)
+
+	analyzer1 := dupword.NewAnalyzer()
+	_ = analyzer1.Flags.Set("ignore", "the")
+	defer dupword.ClearIgnoreWord()
+	analysistest.Run(t, analysistest.TestData(), analyzer1, "a_ignore_the")
+
+	analyzer2 := dupword.NewAnalyzer()
+	_ = analyzer.Flags.Set("ignore", "the,and")
+	analysistest.Run(t, analysistest.TestData(), analyzer2, "a_ignore_the_and")
 }
 
 func Test_checkOneKey(t *testing.T) {
@@ -187,7 +196,7 @@ func TestExcludeWords(t *testing.T) {
 		wantExclude bool
 	}{
 		{
-			name:        "normal word should not exclude",
+			name:        "normal words should not exclude",
 			args:        args{word: "normal"},
 			wantExclude: false,
 		},
