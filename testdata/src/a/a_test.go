@@ -38,3 +38,37 @@ func TestA(t *testing.T) {
 		})
 	}
 }
+
+func ExampleA() {
+	// duplicate words in the example output below should be ignored
+
+	// Output:
+	// hello
+	// hello
+	// hello
+
+	// output:
+	// hello
+	// hello
+	// hello
+
+	// Unordered output:
+	// hello
+	// hello
+	// hello
+
+	// unordered output:
+	// hello
+	// hello
+	// hello
+
+	// this comment block _doesn't_ start with 'output:'
+	// output:
+	// hello
+	// hello // want `Duplicate words \(hello\) found`
+
+	// this also isn't an output block
+	// Unordered output:
+	// hello
+	// hello // want `Duplicate words \(hello\) found`
+}
