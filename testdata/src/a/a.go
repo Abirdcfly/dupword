@@ -34,4 +34,8 @@ func A() {
 	// so so this file done. // want `Duplicate words \(so\) found`
 	// 中文重复复单词无法检测，因为中文不使用空格来分割字符，我们都是用肉眼看的，哈哈哈哈。
 	// 除 非 写 成 这 样 样 子 ！  // want `Duplicate words \(样\) found`
+
+	// output:
+	// hello
+	// hello // want `Duplicate words \(hello\) found`
 }
