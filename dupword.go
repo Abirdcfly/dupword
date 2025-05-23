@@ -249,7 +249,7 @@ func CheckOneKey(raw, key string) (new string, findWord string, find bool) {
 			*/
 			symbol := raw[spaceStart:i]
 			if ((key != "" && curWord == key) || key == "") && curWord == preWord && curWord != "" {
-				if !ExcludeWords(curWord) {
+				if !ExcludeWords(cutTrailingCommas(curWord)) {
 					find = true
 					findWordMap[curWord] = true
 					newLine.WriteString(lastSpace)
@@ -270,7 +270,7 @@ func CheckOneKey(raw, key string) (new string, findWord string, find bool) {
 			// last position
 			word := raw[wordStart:]
 			if ((key != "" && word == key) || key == "") && word == preWord {
-				if !ExcludeWords(word) {
+				if !ExcludeWords(cutTrailingCommas(word)) {
 					find = true
 					findWordMap[word] = true
 				}
@@ -340,4 +340,12 @@ func isExampleOutputStart(comment string) bool {
 		strings.HasPrefix(comment, "// output:") ||
 		strings.HasPrefix(comment, "// Unordered output:") ||
 		strings.HasPrefix(comment, "// unordered output:")
+}
+
+// cutTrailingCommas is used to remove trailing commas of words.
+// The excludeWords are provided as comma-separated list, so it is
+// impossible to ignore "[word], [word]," matches otherwise
+func cutTrailingCommas(s string) string {
+	result, _ := strings.CutSuffix(s, ",")
+	return result
 }
