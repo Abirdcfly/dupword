@@ -42,6 +42,10 @@ func Test(t *testing.T) {
 	analyzer2 := dupword.NewAnalyzer()
 	_ = analyzer.Flags.Set("ignore", "the,and")
 	analysistest.Run(t, analysistest.TestData(), analyzer2, "a_ignore_the_and")
+
+	analyzer3 := dupword.NewAnalyzer()
+	_ = analyzer3.Flags.Set("ignore", "anything")
+	analysistest.Run(t, analysistest.TestData(), analyzer3, "ignore_commas")
 }
 
 func Test_checkOneKey(t *testing.T) {
