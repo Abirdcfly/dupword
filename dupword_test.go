@@ -20,32 +20,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package dupword_test
+package dupword
 
 import (
 	"testing"
 
-	"github.com/Abirdcfly/dupword"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
-func Test(t *testing.T) {
-	analyzer := dupword.NewAnalyzer()
-	tests := []string{"a", "good"}
-	analysistest.Run(t, analysistest.TestData(), analyzer, tests...)
+func TestAnalyzer(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		patterns []string
+		options  map[string]string
+	}{
+		{
+			desc:     "simple",
+			patterns: []string{"a", "good"},
+		},
+		{
+			desc:     "ignore one word",
+			patterns: []string{"a_ignore_the"},
+			options: map[string]string{
+				"ignore": "the",
+			},
+		},
+		{
+			desc:     "ignore several words",
+			patterns: []string{"a_ignore_the_and"},
+			options: map[string]string{
+				"ignore": "the,and",
+			},
+		},
+		{
+			desc:     "ignore commas",
+			patterns: []string{"ignore_commas"},
+			options: map[string]string{
+				"ignore": "anything",
+			},
+		},
+	}
 
-	analyzer1 := dupword.NewAnalyzer()
-	_ = analyzer1.Flags.Set("ignore", "the")
-	defer dupword.ClearIgnoreWord()
-	analysistest.Run(t, analysistest.TestData(), analyzer1, "a_ignore_the")
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
 
-	analyzer2 := dupword.NewAnalyzer()
-	_ = analyzer.Flags.Set("ignore", "the,and")
-	analysistest.Run(t, analysistest.TestData(), analyzer2, "a_ignore_the_and")
+			analyzer := NewAnalyzer()
 
-	analyzer3 := dupword.NewAnalyzer()
-	_ = analyzer3.Flags.Set("ignore", "anything")
-	analysistest.Run(t, analysistest.TestData(), analyzer3, "ignore_commas")
+			for k, v := range test.options {
+				_ = analyzer.Flags.Set(k, v)
+			}
+
+			analysistest.Run(t, analysistest.TestData(), analyzer, test.patterns...)
+		})
+	}
 }
 
 func Test_checkOneKey(t *testing.T) {
@@ -174,9 +202,12 @@ func Test_checkOneKey(t *testing.T) {
 			wantFind: true,
 		},
 	}
+
+	a := &analyzer{}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNew, gotKey, gotFind := dupword.CheckOneKey(tt.args.raw, tt.args.key)
+			gotNew, gotKey, gotFind := a.checkOneKey(tt.args.raw, tt.args.key)
 			if gotNew != tt.wantNew {
 				t.Errorf("CheckOneKey() gotNew = %q, want %q", gotNew, tt.wantNew)
 			}
@@ -225,9 +256,12 @@ func TestExcludeWords(t *testing.T) {
 			wantExclude: true,
 		},
 	}
+
+	a := &analyzer{}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotExclude := dupword.ExcludeWords(tt.args.word); gotExclude != tt.wantExclude {
+			if gotExclude := a.excludeWords(tt.args.word); gotExclude != tt.wantExclude {
 				t.Errorf("excludeWords() = %v, want %v", gotExclude, tt.wantExclude)
 			}
 		})
