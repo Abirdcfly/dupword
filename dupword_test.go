@@ -59,6 +59,13 @@ func TestAnalyzer(t *testing.T) {
 				"ignore": "anything",
 			},
 		},
+		{
+			desc:     "comments only",
+			patterns: []string{"comments_only"},
+			options: map[string]string{
+				"comments-only": "true",
+			},
+		},
 	}
 
 	for _, test := range testCases {
