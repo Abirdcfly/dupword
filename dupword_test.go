@@ -66,6 +66,17 @@ func TestAnalyzer(t *testing.T) {
 				"comments-only": "true",
 			},
 		},
+		{
+			desc:     "raw string sql skip with flag",
+			patterns: []string{"raw_string_sql"},
+			options: map[string]string{
+				"skip-raw-strings": "true",
+			},
+		},
+		{
+			desc:     "raw string with duplicates",
+			patterns: []string{"raw_string_dup"},
+		},
 	}
 
 	for _, test := range testCases {
@@ -81,6 +92,11 @@ func TestAnalyzer(t *testing.T) {
 			analysistest.Run(t, analysistest.TestData(), analyzer, test.patterns...)
 		})
 	}
+}
+
+func TestAnalyzerSuggestedFixes(t *testing.T) {
+	analyzer := NewAnalyzer()
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer, "raw_string_multiline")
 }
 
 func Test_checkOneKey(t *testing.T) {
