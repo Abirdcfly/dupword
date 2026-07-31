@@ -188,7 +188,7 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 	if lit.Kind != token.STRING {
 		return
 	}
-	if a.skipRawStrings && len(lit.Value) > 0 && lit.Value[0] == '`' {
+	if a.skipRawStrings && len(lit.Value) > 1 && lit.Value[0] == '`' && lit.Value[len(lit.Value)-1] == '`' {
 		return
 	}
 	value, err := strconv.Unquote(lit.Value)
@@ -197,17 +197,14 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 		// fall back to default
 		value = lit.Value
 	}
-	quote := value != lit.Value
-	isRawString := quote && len(lit.Value) > 0 && lit.Value[0] == '`'
 	update, keyword, find := a.Check(value)
-	if quote {
-		if isRawString {
+	if find {
+		if len(lit.Value) > 1 && lit.Value[0] == '`' && lit.Value[len(lit.Value)-1] == '`' {
 			update = "`" + update + "`"
 		} else {
 			update = strconv.Quote(update)
 		}
 	}
-	if find {
 		pass.Report(analysis.Diagnostic{Pos: lit.Pos(), End: lit.End(), Message: fmt.Sprintf(Message, keyword), SuggestedFixes: []analysis.SuggestedFix{{
 			Message: "Update",
 			TextEdits: []analysis.TextEdit{{
