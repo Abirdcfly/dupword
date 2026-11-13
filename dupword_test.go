@@ -77,6 +77,10 @@ func TestAnalyzer(t *testing.T) {
 			desc:     "raw string with duplicates",
 			patterns: []string{"raw_string_dup"},
 		},
+		{
+			desc:     "camel case struct fields and tags",
+			patterns: []string{"struct_fields"},
+		},
 	}
 
 	for _, test := range testCases {
@@ -96,7 +100,7 @@ func TestAnalyzer(t *testing.T) {
 
 func TestAnalyzerSuggestedFixes(t *testing.T) {
 	analyzer := NewAnalyzer()
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer, "raw_string_multiline")
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer, "raw_string_multiline", "struct_fields")
 }
 
 func Test_checkOneKey(t *testing.T) {
@@ -239,6 +243,52 @@ func Test_checkOneKey(t *testing.T) {
 			}
 			if gotKey != tt.wantKey {
 				t.Errorf("CheckOneKey() gotKey = %v, want %v", gotKey, tt.wantKey)
+			}
+		})
+	}
+}
+
+func Test_checkCamelCase(t *testing.T) {
+	tests := []struct {
+		name     string
+		raw      string
+		wantNew  string
+		wantKey  string
+		wantFind bool
+	}{
+		{
+			name:     "struct field",
+			raw:      "CardPresentPercentagePercentage",
+			wantNew:  "CardPresentPercentage",
+			wantKey:  "Percentage",
+			wantFind: true,
+		},
+		{
+			name:     "struct tag",
+			raw:      `json:"cardPresentPercentagePercentage,omitempty"`,
+			wantNew:  `json:"cardPresentPercentage,omitempty"`,
+			wantKey:  "Percentage",
+			wantFind: true,
+		},
+		{
+			name:     "no duplicate",
+			raw:      "CardPresentPercentage",
+			wantFind: false,
+		},
+	}
+
+	a := &analyzer{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotNew, gotKey, gotFind := a.checkCamelCase(tt.raw)
+			if gotNew != tt.wantNew {
+				t.Errorf("checkCamelCase() gotNew = %q, want %q", gotNew, tt.wantNew)
+			}
+			if gotKey != tt.wantKey {
+				t.Errorf("checkCamelCase() gotKey = %q, want %q", gotKey, tt.wantKey)
+			}
+			if gotFind != tt.wantFind {
+				t.Errorf("checkCamelCase() gotFind = %v, want %v", gotFind, tt.wantFind)
 			}
 		})
 	}
