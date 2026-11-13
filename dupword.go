@@ -106,10 +106,10 @@ func NewAnalyzer() *analysis.Analyzer {
 }
 
 type analyzer struct {
-	keywords        keywords
-	ignoreWords     ignore
-	commentsOnly    bool
-	skipRawStrings  bool
+	keywords       keywords
+	ignoreWords    ignore
+	commentsOnly   bool
+	skipRawStrings bool
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
@@ -122,13 +122,33 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
 		(*ast.BasicLit)(nil),
+		(*ast.StructType)(nil),
 	}
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		if lit, ok := n.(*ast.BasicLit); ok {
+		switch node := n.(type) {
+		case *ast.BasicLit:
+			lit := node
 			a.fixDuplicateWordInString(pass, lit)
+		case *ast.StructType:
+			a.findDuplicateWordInStructFields(pass, node)
 		}
 	})
 	return nil, nil
+}
+
+func (a *analyzer) findDuplicateWordInStructFields(pass *analysis.Pass, structType *ast.StructType) {
+	for _, field := range structType.Fields.List {
+		for _, name := range field.Names {
+			_, keyword, find := a.checkCamelCase(name.Name)
+			if find {
+				pass.Report(analysis.Diagnostic{
+					Pos:     name.Pos(),
+					End:     name.End(),
+					Message: fmt.Sprintf(Message, keyword),
+				})
+			}
+		}
+	}
 }
 
 func (a *analyzer) fixDuplicateWordInComment(pass *analysis.Pass, f *ast.File) {
@@ -200,6 +220,16 @@ func (a *analyzer) fixDuplicateWordInString(pass *analysis.Pass, lit *ast.BasicL
 	quote := value != lit.Value
 	isRawString := quote && len(lit.Value) > 0 && lit.Value[0] == '`'
 	update, keyword, find := a.Check(value)
+	camelInput := value
+	if find {
+		camelInput = update
+	}
+	camelUpdate, camelKeyword, camelFind := a.checkCamelCase(camelInput)
+	if camelFind {
+		update = camelUpdate
+		keyword = mergeKeywords(keyword, camelKeyword)
+		find = true
+	}
 	if quote {
 		if isRawString {
 			update = "`" + update + "`"
@@ -324,6 +354,131 @@ func (a *analyzer) checkOneKey(raw, key string) (new string, findWord string, fi
 		findWord = strings.Join(findWordSlice, ",")
 	}
 	return
+}
+
+type wordSpan struct {
+	start int
+	end   int
+}
+
+// checkCamelCase detects adjacent duplicate words within camel-case text.
+// It returns an updated string with each repeated segment removed.
+func (a *analyzer) checkCamelCase(raw string) (new string, findWord string, find bool) {
+	runes := []rune(raw)
+	spans := camelCaseWordSpans(runes)
+	if len(spans) < 2 {
+		return
+	}
+
+	findWordMap := make(map[string]bool)
+	remove := make([]wordSpan, 0)
+	for i := 1; i < len(spans); i++ {
+		previous, current := spans[i-1], spans[i]
+		// A gap means punctuation or another separator appeared between words.
+		if previous.end != current.start {
+			continue
+		}
+
+		previousWord := string(runes[previous.start:previous.end])
+		currentWord := string(runes[current.start:current.end])
+		if previousWord != currentWord || !a.matchesKeyword(currentWord) || a.excludeWords(currentWord) {
+			continue
+		}
+
+		find = true
+		findWordMap[currentWord] = true
+		remove = append(remove, current)
+	}
+	if !find {
+		return
+	}
+
+	updated := make([]rune, 0, len(runes))
+	cursor := 0
+	for _, span := range remove {
+		updated = append(updated, runes[cursor:span.start]...)
+		cursor = span.end
+	}
+	updated = append(updated, runes[cursor:]...)
+
+	words := make([]string, 0, len(findWordMap))
+	for word := range findWordMap {
+		words = append(words, word)
+	}
+	sort.Strings(words)
+	return string(updated), strings.Join(words, ","), true
+}
+
+func (a *analyzer) matchesKeyword(word string) bool {
+	if len(a.keywords) == 0 {
+		return true
+	}
+	for _, keyword := range a.keywords {
+		if word == keyword {
+			return true
+		}
+	}
+	return false
+}
+
+func camelCaseWordSpans(runes []rune) []wordSpan {
+	var spans []wordSpan
+	for start := 0; start < len(runes); {
+		for start < len(runes) && !unicode.IsLetter(runes[start]) && !unicode.IsDigit(runes[start]) {
+			start++
+		}
+		if start == len(runes) {
+			break
+		}
+
+		end := start + 1
+		for end < len(runes) && (unicode.IsLetter(runes[end]) || unicode.IsDigit(runes[end])) {
+			end++
+		}
+
+		wordStart := start
+		for i := start + 1; i < end; i++ {
+			if isCamelCaseBoundary(runes, i, end) {
+				spans = append(spans, wordSpan{start: wordStart, end: i})
+				wordStart = i
+			}
+		}
+		spans = append(spans, wordSpan{start: wordStart, end: end})
+		start = end
+	}
+	return spans
+}
+
+func isCamelCaseBoundary(runes []rune, current, end int) bool {
+	previousRune, currentRune := runes[current-1], runes[current]
+	if unicode.IsLower(previousRune) && unicode.IsUpper(currentRune) {
+		return true
+	}
+	if unicode.IsDigit(previousRune) != unicode.IsDigit(currentRune) {
+		return true
+	}
+	return unicode.IsUpper(previousRune) && unicode.IsUpper(currentRune) &&
+		current+1 < end && unicode.IsLower(runes[current+1])
+}
+
+func mergeKeywords(left, right string) string {
+	if left == "" {
+		return right
+	}
+	if right == "" {
+		return left
+	}
+
+	keywords := make(map[string]bool)
+	for _, keyword := range strings.Split(left+","+right, ",") {
+		keywords[keyword] = true
+	}
+	result := make([]string, 0, len(keywords))
+	for keyword := range keywords {
+		result = append(result, keyword)
+	}
+	sort.Strings(result)
+	return strings.Join(result, ",")
 }
 
 func (a *analyzer) Check(raw string) (update string, keyword string, find bool) {
